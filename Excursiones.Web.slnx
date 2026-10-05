@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Excursiones.Data/Excursiones.Data.csproj" Id="eb1e0213-1453-41b1-8153-c293e61f2bf8" />
+  <Project Path="Excursiones.Web/Excursiones.Web.csproj" />
+</Solution>

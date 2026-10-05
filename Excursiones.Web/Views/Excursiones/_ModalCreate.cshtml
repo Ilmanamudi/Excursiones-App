@@ -1,0 +1,68 @@
+﻿@model Excursiones.Web.Models.ExcursionVM
+
+<div class="modal fade" id="viajeModal" tabindex="-1" aria-labelledby="viajeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: var(--primary); color: white;">
+                <h5 class="modal-title" id="viajeModalLabel"><i class="bi bi-geo-alt-fill me-2"></i> Registrar Nueva Excursión</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+   
+            <form asp-controller="Excursiones" asp-action="Create" method="post" id="formCreateExcursion">
+                <div class="modal-body p-4">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NombreExcursion" class="form-label fw-bold">Nombre de la Excursión</label>
+                            <input asp-for="NombreExcursion" class="form-control" placeholder="Ej: Cataratas del Iguazú" />
+                            <span asp-validation-for="NombreExcursion" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FechaExcursion" class="form-label fw-bold">Fecha de Salida</label>
+                            <input asp-for="FechaExcursion" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="FechaExcursion" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Precio" class="form-label fw-bold">Precio ($)</label>
+                            <input asp-for="Precio" class="form-control" placeholder="0.00" />
+                            <span asp-validation-for="Precio" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Cupo" class="form-label fw-bold">Cupo</label>
+                            <input asp-for="Cupo" class="form-control" placeholder="Ej: 40" />
+                            <span asp-validation-for="Cupo" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="DuracionDias" class="form-label fw-bold">Duración (Días)</label>
+                            <input asp-for="DuracionDias" class="form-control" placeholder="Ej: 7" />
+                            <span asp-validation-for="DuracionDias" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="IdEstado" class="form-label fw-bold">Estado de la Excursión</label>
+                        <select asp-for="IdEstado" asp-items="ViewBag.Estados" class="form-select">
+                            <option value="">Seleccione un estado...</option>
+                        </select>
+                        <span asp-validation-for="IdEstado" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Descripcion" class="form-label fw-bold">Descripción (Opcional)</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="2" placeholder="Detalles del itinerario..."></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: var(--primary); border: none;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

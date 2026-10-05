@@ -1,0 +1,58 @@
+﻿<div class="modal fade" id="modalDetails" tabindex="-1" aria-labelledby="modalDetailsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalDetailsLabel"><i class="bi bi-info-circle-fill me-2"></i> Detalles de la Excursión</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small fw-bold">ID de Excursión</label>
+                        <p class="fs-5 fw-bold text-dark" id="detailsId"></p>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label text-muted small fw-bold">Nombre / Destino</label>
+                        <p class="fs-5 text-dark" id="detailsNombre"></p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small fw-bold">Fecha de Salida</label>
+                        <p class="fs-5 text-dark" id="detailsFecha"></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small fw-bold">Estado</label>
+                        <p class="fs-5 text-dark fw-bold" id="detailsEstado"></p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small fw-bold">Precio</label>
+                        <p class="fs-5 text-success fw-bold" id="detailsPrecio"></p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small fw-bold">Cupo</label>
+                        <p class="fs-5 text-dark" id="detailsCupo"></p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label text-muted small fw-bold">Duración (Días)</label>
+                        <p class="fs-5 text-dark" id="detailsDuracion"></p>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Descripción del Itinerario</label>
+                    <p class="fs-6 text-dark border p-3 rounded bg-light" id="detailsDescripcion"></p>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
