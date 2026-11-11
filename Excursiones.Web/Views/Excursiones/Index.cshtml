@@ -1,25 +1,10 @@
 ﻿@model IEnumerable<Excursiones.Web.Models.ExcursionVM>
-
-<!-- Alerta de Éxito -->
-@if (TempData["Exito"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show m-4 shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Exito"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<!-- Alerta de Error -->
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show m-4 shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+@{
+    ViewData["Title"] = "Inicio";
 }
 
 <div class="container-fluid px-4">
-    
+
     <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
         <div>
             <h3 class="fw-bold mb-0">Excursiones Programadas</h3>
@@ -46,7 +31,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                     @foreach (var excursion in Model)
                     {
                         <tr>
@@ -75,9 +60,9 @@
                                     </button>
 
                                     <!-- Botón Editar -->
-                                    <button type="button" class="btn btn-light text-primary border me-1 btn-ajax-modal" 
-                                         data-url="@Url.Action("ObtenerModalEditar", "Excursiones", new { id = excursion.IdExcursion })">
-                                             <i class="bi bi-pencil-square"></i>
+                                    <button type="button" class="btn btn-light text-primary border me-1 btn-ajax-modal"
+                                            data-url="@Url.Action("ObtenerModalEditar", "Excursiones", new { id = excursion.IdExcursion })">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
 
                                     <!-- Botón Eliminar (Abre el Modal) -->
@@ -95,31 +80,16 @@
             </table>
         </div>
     </div>
-</div> 
+</div>
 
 <!-- Inyección de las Vistas Parciales (Modales) -->
-<partial name="_ModalCreate"  model="new Excursiones.Web.Models.ExcursionVM()" />
-@* <partial name="_ModalEdit" /> *@
+<partial name="_ModalCreate" model="new Excursiones.Web.Models.ExcursionVM()" />
 <partial name="_ModalDetails" />
 <partial name="_ModalDelete" />
 <div id="contenedorModales"></div>
 
 @section Scripts {
-    
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/excursiones.js" asp-append-version="true"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            
-            var alerta = document.querySelector('.alert');
-            if (alerta) {
-               
-                setTimeout(function () {
-                    var bootstrapAlert = new bootstrap.Alert(alerta);
-                    bootstrapAlert.close();
-                }, 3500);
-            }
-        });
-    </script>
 }

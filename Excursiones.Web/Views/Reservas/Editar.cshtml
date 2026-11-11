@@ -1,0 +1,87 @@
+﻿@model Excursiones.Data.Modelos.Reserva
+
+@{
+    ViewData["Title"] = "Modificar Reserva";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i>Modificar Reserva</h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Resumen de la excursión -->
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <h5 class="fw-bold text-dark mb-3">@Model.Excursion.NombreExcursion</h5>
+                        <ul class="mb-0 list-unstyled text-dark">
+                            <li class="mb-1"><i class="bi bi-calendar-event me-2"></i><strong>Salida:</strong> @Model.Excursion.FechaExcursion.ToString("dd/MM/yyyy")</li>
+                            <li class="mb-1"><i class="bi bi-tag me-2"></i><strong>Precio por lugar:</strong> $@Model.Excursion.Precio.ToString("N2")</li>
+                            <li><i class="bi bi-person-check me-2"></i><strong>Lugares disponibles:</strong> @Model.Excursion.Cupo</li>
+                        </ul>
+                    </div>
+
+                    <!-- Formulario -->
+                    <form asp-controller="Reservas" asp-action="Editar" method="post">
+                        <input type="hidden" name="idReserva" value="@Model.IdReserva" />
+
+                        <div class="mb-4">
+                            <label for="nuevaCantidadLugares" class="form-label fw-bold text-muted">¿Cuántos lugares necesitas en total?</label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-people-fill text-primary"></i></span>
+                                <input type="number"
+                                       class="form-control fw-bold"
+                                       id="nuevaCantidadLugares"
+                                       name="nuevaCantidadLugares"
+                                       value="@Model.CantidadLugares"
+                                       min="1"
+                                       max="@(Model.CantidadLugares + Model.Excursion.Cupo)"
+                                       required />
+                            </div>
+                            <div class="form-text mt-2">
+                                <i class="bi bi-info-circle me-1"></i> Si deseas cancelar todos tus lugares, regresa al panel y usa el botón de "Cancelar Reserva".
+                            </div>
+                        </div>
+
+                        <!-- Total Dinámico -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3 border">
+                            <span class="fw-bold text-muted fs-6 text-uppercase">Nuevo Total Abonado:</span>
+                            <span class="fw-bold fs-3 text-success" id="totalCalculado">$ @Model.TotalAbonado.ToString("N2")</span>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+                            <a asp-action="MisReservas" class="btn btn-light border px-4">Volver</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Guardar Cambios</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Pasamos el precio unitario desde el backend a JavaScript de forma segura
+            var precioUnitario = @Model.Excursion.Precio.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+            // Escuchamos cada vez que el usuario cambia el número en el input
+            $('#nuevaCantidadLugares').on('input', function () {
+                var cantidad = parseInt($(this).val()) || 0;
+
+                if (cantidad > 0) {
+                    var nuevoTotal = cantidad * precioUnitario;
+                    // Formateamos a moneda local 
+                    $('#totalCalculado').text('$ ' + nuevoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                } else {
+                    $('#totalCalculado').text('$ 0,00');
+                }
+            });
+        });
+    </script>
+}

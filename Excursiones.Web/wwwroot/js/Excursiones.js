@@ -60,19 +60,39 @@
  
     $('#modalDetails').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
-        
-       
-        $('#detailsId').text('#' + button.data('id'));
+
+        // Capturamos el ID de la excursión para usarlo tanto en el diseño como en la petición
+        var idExcursion = button.data('id');
+
+        $('#detailsId').text('#' + idExcursion);
         $('#detailsNombre').text(button.data('nombre'));
         $('#detailsFecha').text(button.data('fecha'));
         $('#detailsPrecio').text('$ ' + button.data('precio'));
         $('#detailsCupo').text(button.data('cupo') + ' pasajeros');
         $('#detailsDuracion').text(button.data('duracion') + ' días');
         $('#detailsDescripcion').text(button.data('descripcion') || 'Sin descripción detallada.');
-        
+
         var idEstado = button.data('estado');
         var textoEstado = idEstado == 1 ? 'Programada' : (idEstado == 2 ? 'Completada' : 'Cancelada');
         $('#detailsEstado').text(textoEstado);
+
+        // NUEVO: Mostrar mensaje de carga inicial y buscar los pasajeros por AJAX
+        $('#contenedorPasajeros').html('<p class="text-muted small mb-0 text-center py-2"><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Cargando pasajeros...</p>');
+
+        $.get('/Excursiones/ObtenerPasajeros', { id: idExcursion })
+            .done(function (htmlRespuesta) {
+                // Inyectamos la tabla HTML que nos devuelve el servidor
+                $('#contenedorPasajeros').html(htmlRespuesta);
+            })
+            .fail(function () {
+                $('#contenedorPasajeros').html('<p class="text-danger small mb-0 text-center py-2">Error al cargar la lista de pasajeros.</p>');
+            });
+    });
+
+    $('#modalDelete').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        $('#deleteId').val(button.data('id'));
+        $('#deleteNombre').text(button.data('nombre'));
     });
 
     $('#modalDelete').on('show.bs.modal', function (event) {

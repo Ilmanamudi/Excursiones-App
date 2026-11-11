@@ -30,5 +30,10 @@ namespace Excursiones.Web.Models
         public string? NombreEstado { get; set; }
         public string? ColorEstado { get; set; }
 
+        [Display(Name = "Imagen de la Excursión")]
+        public IFormFile? ImagenFile { get; set; }
+
+        public string? ImagenUrl { get; set; }
+
     }
 }

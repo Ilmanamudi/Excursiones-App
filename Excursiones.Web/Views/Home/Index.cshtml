@@ -1,8 +1,133 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<Excursiones.Web.Models.ExcursionVM>
+@inject Excursiones.Data.Repositorios.ICalificacionRepository CalificacionRepo
+@{
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- SECCIÓN PORTADA -->
+<div class="px-4 py-5 my-5 text-center bg-dark text-white rounded-4 shadow" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80') center/cover;">
+    <i class="bi bi-compass text-info" style="font-size: 4rem;"></i>
+    <h1 class="display-4 fw-bold text-white mt-3">Descubre tu próxima aventura</h1>
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4 mt-3">Explora nuestros destinos exclusivos, revisa los itinerarios y reserva tu lugar hoy mismo con un solo clic.</p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+            <a href="#proximas-excursiones" class="btn btn-info btn-lg px-4 gap-3 fw-bold text-dark">Ver Excursiones</a>
+        </div>
+    </div>
+</div>
+
+<!-- SECCIÓN EXCURSIONES DINÁMICAS -->
+<div id="proximas-excursiones" class="container px-4 py-5">
+    <h2 class="pb-2 border-bottom fw-bold"><i class="bi bi-map me-2"></i>Próximas Salidas</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-4">
+            <i class="bi bi-info-circle me-2"></i> Por el momento no hay excursiones programadas. ¡Vuelve pronto!
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4 mt-2">
+            @foreach (var excursion in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="@excursion.ImagenUrl" class="card-img-top" alt="Imagen de la excursión" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-success">Programada</span>
+                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i> @excursion.FechaExcursion.ToString("dd MMM yyyy")</small>
+                            </div>
+
+                            <h5 class="card-title fw-bold">@excursion.NombreExcursion</h5>
+
+                            <p class="card-text text-muted small text-truncate" title="@excursion.Descripcion">
+                                @(string.IsNullOrEmpty(excursion.Descripcion) ? "Sin descripción detallada." : excursion.Descripcion)
+                            </p>
+
+                            <!-- ESTADÍSTICAS Y ESTRELLAS -->
+                            @{
+                                var estadisticas = CalificacionRepo.ObtenerEstadisticasPorDestino(excursion.NombreExcursion);
+                            }
+
+                            <div class="mb-3">
+                                @if (estadisticas.TotalResenas > 0)
+                                {
+                                    <div class="text-warning d-inline-block">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(estadisticas.Promedio))
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="text-muted small ms-1 fw-bold">
+                                        @estadisticas.Promedio.ToString("0.0")
+                                        <span class="fw-normal">(@estadisticas.TotalResenas reseñas)</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <div class="text-muted small">
+                                        <i class="bi bi-star me-1"></i>Nuevo destino (Sin reseñas)
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-end mt-3">
+                                <div>
+                                    <small class="text-muted d-block">Precio por persona</small>
+                                    <h4 class="text-primary fw-bold mb-0">$ @excursion.Precio.ToString("N2")</h4>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Lugares</small>
+                                    <span class="fw-bold @(excursion.Cupo == 0 ? "text-danger" : "")">
+                                        @excursion.Cupo
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 pb-3 pt-0">
+                            @if (excursion.Cupo > 0)
+                            {
+                                @if (User.Identity.IsAuthenticated && !User.HasClaim("Accion", "CrearReservaPropia"))
+                                {
+                                    
+                                    <button type="button" class="btn btn-primary w-100 fw-bold" onclick="Swal.fire({
+                                        icon: 'info',
+                                        title: 'Modo Administrador',
+                                        text: 'El flujo de reservas está habilitado únicamente para cuentas de clientes.',
+                                        confirmButtonColor: '#0d6efd'
+                                        });">
+                                        <i class="bi bi-ticket-perforated me-2"></i>Reservar Lugar
+                                    </button>
+                                }
+                                else
+                                {
+                                    
+                                    <a asp-controller="Reservas" asp-action="Crear" asp-route-id="@excursion.IdExcursion" class="btn btn-primary w-100 fw-bold">
+                                        <i class="bi bi-ticket-perforated me-2"></i>Reservar Lugar
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                
+                                <button class="btn btn-secondary w-100 fw-bold" disabled>
+                                    <i class="bi bi-x-circle me-2"></i>Lugares Agotados
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>

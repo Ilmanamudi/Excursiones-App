@@ -1,0 +1,95 @@
+﻿@model Excursiones.Data.Modelos.Reserva
+
+@{
+    ViewData["Title"] = "Calificar Excursión";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-warning text-dark rounded-top-4 py-3 text-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-star-fill me-2"></i>Calificar Excursión</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+
+                    <h4 class="fw-bold mb-1">@Model.Excursion.NombreExcursion</h4>
+                    <p class="text-muted mb-4">Viaje realizado el @Model.Excursion.FechaExcursion.ToString("dd/MM/yyyy")</p>
+
+                    <form asp-controller="Reservas" asp-action="Calificar" method="post">
+                        <input type="hidden" name="idReserva" value="@Model.IdReserva" />
+
+                        <!-- Input oculto que guarda el número de estrellas -->
+                        <input type="hidden" name="puntuacion" id="puntuacionSeleccionada" value="0" required />
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-muted mb-3">¿Qué te pareció la experiencia?</h6>
+
+                            <!-- Contenedor de estrellas interactivo -->
+                            <div class="d-flex justify-content-center gap-2 mb-3" id="estrellas-contenedor">
+                                <i class="bi bi-star fs-1 text-warning cursor-pointer estrella" data-valor="1" style="cursor: pointer;"></i>
+                                <i class="bi bi-star fs-1 text-warning cursor-pointer estrella" data-valor="2" style="cursor: pointer;"></i>
+                                <i class="bi bi-star fs-1 text-warning cursor-pointer estrella" data-valor="3" style="cursor: pointer;"></i>
+                                <i class="bi bi-star fs-1 text-warning cursor-pointer estrella" data-valor="4" style="cursor: pointer;"></i>
+                                <i class="bi bi-star fs-1 text-warning cursor-pointer estrella" data-valor="5" style="cursor: pointer;"></i>
+                            </div>
+                            <small class="text-danger d-none" id="error-estrellas">Debes seleccionar al menos una estrella.</small>
+                        </div>
+
+                        <div class="mb-4 text-start">
+                            <label for="comentario" class="form-label fw-bold text-muted">Comentario (Opcional)</label>
+                            <textarea class="form-control bg-light border-0 shadow-sm" name="comentario" id="comentario" rows="3" placeholder="Cuéntanos qué fue lo que más te gustó..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="MisReservas" class="btn btn-light border px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm" id="btnGuardar">Enviar Calificación</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var puntuacionActual = 0;
+
+            
+            $('.estrella').hover(function () {
+                var valor = $(this).data('valor');
+                pintarEstrellas(valor);
+            }, function () {
+                pintarEstrellas(puntuacionActual);
+            });
+
+            $('.estrella').click(function () {
+                puntuacionActual = $(this).data('valor');
+                $('#puntuacionSeleccionada').val(puntuacionActual); // Guardamos el valor en el input oculto
+                $('#error-estrellas').addClass('d-none'); // Ocultamos el error si lo había
+            });
+
+            function pintarEstrellas(valor) {
+                $('.estrella').each(function () {
+                    var valorEstrella = $(this).data('valor');
+                    if (valorEstrella <= valor) {
+                        $(this).removeClass('bi-star').addClass('bi-star-fill');
+                    } else {
+                        $(this).removeClass('bi-star-fill').addClass('bi-star');
+                    }
+                });
+            }
+
+            // Validación antes de enviar el formulario
+            $('form').submit(function (e) {
+                if (puntuacionActual === 0) {
+                    e.preventDefault();
+                    $('#error-estrellas').removeClass('d-none');
+                }
+            });
+        });
+    </script>
+}

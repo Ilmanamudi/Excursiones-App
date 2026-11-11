@@ -1,24 +1,36 @@
 ﻿using Excursiones.Data.Modelos;
 using Excursiones.Data.Repositorios;
 using Excursiones.Web.Models;
+using Excursiones.Web.Seguridad;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Excursiones.Web.Controllers
 {
+    [Authorize]
     public class ExcursionesController : Controller
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IExcursionRepository _excursionRepository;
+        private readonly IReservaRepository _reservaRepository;
 
-        public ExcursionesController(IExcursionRepository excursionRepository)
+        public ExcursionesController(IExcursionRepository excursionRepository, IReservaRepository reservaRepository, IWebHostEnvironment webHostEnvironment)
         {
             _excursionRepository = excursionRepository;
+            _reservaRepository = reservaRepository;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Excursiones
+        [HttpGet]
+        [Authorize]
+        [TieneAccion("AccederPanelAdmin")]
         public ActionResult Index()
         {
+            // Actualizamos los estados automáticamente
+            _excursionRepository.ActualizarEstadosAutomaticamente();
             var excursionesddbb = _excursionRepository.ObtenerExcursiones();
            
             var excursiones = excursionesddbb
@@ -49,8 +61,20 @@ namespace Excursiones.Web.Controllers
             return View(excursiones);
         }
 
-        // POST: Excursiones/Create
+        [HttpGet]
+        [TieneAccion("VerReservasTotales")]
+        public IActionResult ObtenerPasajeros(int id)
+        {
+            var reservas = _reservaRepository.ObtenerPorExcursionId(id);
+
+          
+            return PartialView("_TablaPasajeros", reservas);
+        }
+
+     
+        
         [HttpPost]
+        [TieneAccion("CrearExcursion")]
         public IActionResult Create(ExcursionVM excursion)
         {
             if (excursion.FechaExcursion.Date < DateTime.Now.Date)
@@ -58,45 +82,91 @@ namespace Excursiones.Web.Controllers
                 ModelState.AddModelError("FechaExcursion", "La fecha de salida no puede ser en el pasado.");
             }
 
-
             if (!ModelState.IsValid)
             {
                 var primerError = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
-                TempData["Mensaje"] = $"Error: {primerError}";
+                TempData["Error"] = $"Error: {primerError}";
                 return RedirectToAction(nameof(Index));
             }
 
 
-            var nuevaExcursion = new Excursion
-            {
-                NombreExcursion = excursion.NombreExcursion,
-                FechaExcursion = excursion.FechaExcursion,
-                Precio = excursion.Precio,
-                Cupo = excursion.Cupo,
-                IdEstado = excursion.IdEstado,
-                Descripcion = excursion.Descripcion,
-                DuracionDias = excursion.DuracionDias,
-                Borrado = false
-            };
+           
+                string imagenPath = "/images/default-excursion.png"; // Imagen por defecto por si no sube nada
 
-            bool guardadoExitoso = _excursionRepository.AgregarExcursion(nuevaExcursion);
+                // Verificamos si el usuario seleccionó un archivo
+                if (excursion.ImagenFile != null && excursion.ImagenFile.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "excursiones");
 
-            if (guardadoExitoso)
-            {
-                TempData["Exito"] = "La excursión se guardó correctamente.";
+                    // Si la carpeta no existe, la creamos
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // Creamos un nombre único para evitar que dos fotos se llamen igual y se sobrescriban
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(excursion.ImagenFile.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        excursion.ImagenFile.CopyTo(fileStream);
+                    }
+
+                    imagenPath = "/images/excursiones/" + uniqueFileName;
+                }
+
+
+
+                var nuevaExcursion = new Excursion
+                {
+                    NombreExcursion = excursion.NombreExcursion,
+                    FechaExcursion = excursion.FechaExcursion,
+                    Precio = excursion.Precio,
+                    Cupo = excursion.Cupo,
+                    IdEstado = excursion.IdEstado,
+                    Descripcion = excursion.Descripcion,
+                    DuracionDias = excursion.DuracionDias,
+                    ImagenUrl = imagenPath, 
+                    Borrado = false
+                };
+
+                bool guardadoExitoso = _excursionRepository.AgregarExcursion(nuevaExcursion);
+
+                if (guardadoExitoso)
+                {
+                    TempData["Exito"] = "La excursión se guardó correctamente.";
+                }
+                else
+                {
+                    TempData["Error"] = "Hubo un problema al procesar la solicitud.";
+                }
+
+                return RedirectToAction(nameof(Index));
             }
-            else
-            {
-                TempData["Error"] = "Hubo un problema al procesar la solicitud.";
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // POST: Excursiones/Edit
+        
+        
         [HttpPost]
+        [TieneAccion("EditarExcursion")]
         public ActionResult Edit(ExcursionVM excursion)
         {
+            
+            var excursionAModificar = _excursionRepository.ObtenerExcursionPorId(excursion.IdExcursion);
+
+            if (excursionAModificar == null)
+            {
+                TempData["Error"] = "Error: No se encontró la excursión seleccionada.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            bool esPasadaYHhistorica = excursionAModificar.IdEstado == 2 && excursionAModificar.FechaExcursion.Date < DateTime.Now.Date;
+            //  Si ya estaba completada (IdEstado == 2) o su fecha ya pasó, se prohíbe editar
+            if (esPasadaYHhistorica)
+            {
+                TempData["Error"] = "No se puede editar una excursión que ya ha sido completada o cuya fecha de salida ya ocurrió.";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (excursion.FechaExcursion.Date < DateTime.Now.Date)
             {
                 ModelState.AddModelError("FechaExcursion", "No puedes reprogramar una excursión al pasado.");
@@ -111,7 +181,7 @@ namespace Excursiones.Web.Controllers
 
             try
             {
-                var excursionAModificar = _excursionRepository.ObtenerExcursionPorId(excursion.IdExcursion);
+              
 
                 if (excursionAModificar != null)
                 {
@@ -125,18 +195,18 @@ namespace Excursiones.Web.Controllers
                     excursionAModificar.DuracionDias = excursion.DuracionDias;
 
                     _excursionRepository.ActualizarExcursion(excursionAModificar);
-                    TempData["Mensaje"] = "Excursión actualizada correctamente.";
+                    TempData["Exito"] = "Excursión actualizada correctamente.";
                 }
                 else
                 {
-                    TempData["Mensaje"] = "Error: No se encontró la excursión seleccionada.";
+                    TempData["Error"] = "Error: No se encontró la excursión seleccionada.";
                 }
 
                 return RedirectToAction(nameof(Index));
             }
             catch
             {
-                TempData["Mensaje"] = "Ocurrió un error al intentar actualizar.";
+                TempData["Error"] = "Ocurrió un error al intentar actualizar.";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -144,6 +214,7 @@ namespace Excursiones.Web.Controllers
         // POST: Excursiones/Delete/id
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [TieneAccion("EditarExcursion")]
         public ActionResult Delete(int id) 
         {
             try
@@ -153,9 +224,10 @@ namespace Excursiones.Web.Controllers
                 if (excursion != null)
                 {
                     excursion.Borrado = true;
+                    excursion.IdEstado = 3;
                     _excursionRepository.ActualizarExcursion(excursion);
 
-                    TempData["Exito"] = "Excursión eliminada correctamente.";
+                    TempData["Exito"] = "Excursión eliminada y suspendida correctamente.";
                 }
                 else
                 {
@@ -173,6 +245,7 @@ namespace Excursiones.Web.Controllers
         }
 
         [HttpGet]
+        [TieneAccion("EditarExcursion")]
         public IActionResult ObtenerModalEditar(int id)
         {
          
@@ -196,14 +269,10 @@ namespace Excursiones.Web.Controllers
                 Descripcion = excursion.Descripcion
             };
 
-         
-            var listaEstados = new List<SelectListItem>
-                {
-                    new SelectListItem { Value = "1", Text = "Programada" },
-                    new SelectListItem { Value = "2", Text = "Completada" },
-                    new SelectListItem { Value = "3", Text = "Cancelada" }
-                };
-            ViewBag.Estados = new SelectList(listaEstados, "Value", "Text");
+
+            var estadosDb = _excursionRepository.ObtenerEstadosExcursion().ToList();
+            
+            ViewBag.Estados = new SelectList(estadosDb, "IdEstado", "NombreEstado");
 
             return PartialView("_ModalEdit", vm);
         }

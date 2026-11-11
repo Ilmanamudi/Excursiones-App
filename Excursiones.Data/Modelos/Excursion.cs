@@ -31,7 +31,9 @@ namespace Excursiones.Data.Modelos
         public int IdEstado { get; set; } 
 
         [ForeignKey("IdEstado")]
-        public virtual EstadoExcursion Estado { get; set; } 
+        public virtual EstadoExcursion Estado { get; set; }
+
+        public string? ImagenUrl { get; set; }
     }
 
 }

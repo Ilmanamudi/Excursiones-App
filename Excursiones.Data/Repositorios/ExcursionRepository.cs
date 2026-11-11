@@ -4,22 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Excursiones.Data.Repositorios
 {
-    public interface IExcursionRepository
-    {
-        void ActualizarExcursion(Excursion excursion);
-
-        bool AgregarExcursion(Excursion excursion);
-
-        bool BorrarExcursion(int IdExcursion);
-
-        Excursion ObtenerExcursionPorId(int IdExcursion);
-
-        List<Excursion> ObtenerExcursiones();
-
-        IEnumerable<EstadoExcursion> ObtenerEstadosExcursion();
-
-    }
-
     public class ExcursionRepository : IExcursionRepository
     {
         private ExcursionesContext _db;
@@ -43,7 +27,7 @@ namespace Excursiones.Data.Repositorios
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here if needed
+             
                 return false;
             }
         }
@@ -83,6 +67,25 @@ namespace Excursiones.Data.Repositorios
             {
                 
                 return false;
+            }
+        }
+
+        public void ActualizarEstadosAutomaticamente()
+        {
+            
+            var excursionesPasadas = _db.Excursiones
+                .Where(e => e.IdEstado == 1 && e.FechaExcursion.Date < DateTime.Now.Date)
+                .ToList();
+
+            if (excursionesPasadas.Any())
+            {
+                foreach (var excursion in excursionesPasadas)
+                {
+                    excursion.IdEstado = 2; 
+                }
+
+                
+                _db.SaveChanges();
             }
         }
 
